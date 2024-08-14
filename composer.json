@@ -1,7 +1,7 @@
 {
     "name": "techigh/sendgo-notification",
     "description": "Notification Package for Laravel",
-    "type": "library",
+    "type": "package",
     "license": "MIT",
     "autoload": {
         "psr-4": {
