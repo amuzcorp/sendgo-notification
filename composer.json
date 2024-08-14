@@ -1,8 +1,11 @@
 {
     "name": "techigh/sendgo-notification",
     "description": "Notification Package for Laravel",
-    "type": "package",
     "license": "MIT",
+    "keywords": [
+        "notification",
+        "message"
+    ],
     "autoload": {
         "psr-4": {
             "Techigh\\SendgoNotification\\": "src/"
@@ -22,5 +25,15 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {}
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.2",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^6.0|^7.0|^7.2",
+        "illuminate/support": "^6.0|^7.0|^8.0|^9.0",
+        "illuminate/notifications": "~5.8.0|^6.0|^7.0|^8.0|^9.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
 }

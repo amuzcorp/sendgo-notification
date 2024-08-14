@@ -2,14 +2,10 @@
 
 namespace Techigh\SendgoNotification\Attributes\Sms;
 
-use Exception;
 use Illuminate\Notifications\Notification;
 use Techigh\SendgoNotification\Contracts\ChannelInterface;
-use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
-use Techigh\SendgoNotification\SendGo;
 
-//implements SendGoChannelInterface
 class SmsChannel implements ChannelInterface
 {
 

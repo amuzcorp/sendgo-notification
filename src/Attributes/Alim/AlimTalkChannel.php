@@ -3,7 +3,6 @@
 namespace Techigh\SendgoNotification\Attributes\Alim;
 
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
 
 class AlimTalkChannel

@@ -2,13 +2,11 @@
 
 namespace Techigh\SendgoNotification\Attributes\Sms;
 
-use Exception;
 use Illuminate\Support\Facades\Log;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
 use Techigh\SendgoNotification\SendGo;
 
-//implements SendGoInterface
 class Sms extends SendGo implements SendGoAttributeInterface
 {
 
@@ -19,7 +17,6 @@ class Sms extends SendGo implements SendGoAttributeInterface
         $this->initializeSenderKey()
             ->initializeUri();
     }
-
 
     public function initializeUri(): static
     {
