@@ -33,7 +33,7 @@ class SendGo
 
     private function debug(): void
     {
-        if (config('sendgo.debug')) {
+        if (config('sendgo.debug') == 'true') {
             $this->debug = true;
             $this->client->withOptions(['verify' => false]);
         }
