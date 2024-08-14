@@ -1,0 +1,26 @@
+{
+    "name": "techigh/sendgo-notification",
+    "description": "Notification Package for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Techigh\\SendgoNotification\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Techigh\\SendgoNotification\\SendgoNotificationServiceProvider"
+            ]
+        }
+    },
+    "authors": [
+        {
+            "name": "Techigh",
+            "email": "techigh@amuz.co.kr"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
