@@ -7,7 +7,7 @@ use Techigh\SendgoNotification\Contracts\MessageAbstract;
 class FriendTalkMessage extends MessageAbstract
 {
     private array $buttons = [];
-    private string $type = 'FT'; // FT | FI | FW
+    private string $messageType = 'FT'; // FT | FI | FW
     private string $wide = 'N'; // Y | N
     private string $adult = 'N'; // Y | N
     private string $adFlag = 'Y'; // Y | N
@@ -72,9 +72,9 @@ class FriendTalkMessage extends MessageAbstract
         return $this;
     }
 
-    public function type(string $type): static
+    public function messageType(string $messageType): static
     {
-        $this->type = $type;
+        $this->messageType = $messageType;
         return $this;
     }
 
@@ -104,10 +104,10 @@ class FriendTalkMessage extends MessageAbstract
             $this->smsTitle = null;
         }
         return [
-            'messageTranAt' => $this->at,
-            "messageTranScheduleType" => $this->scheduleType,
-            'type' => $this->type,
-            'templateContent' => $this->content,
+            'at' => $this->at,
+            "scheduleType" => $this->scheduleType,
+            'messageType' => $this->messageType,
+            'content' => $this->content,
             'buttons' => $this->buttons,
             'image' => $this->image,
             'imageUrl' => $this->imageUrl,
@@ -115,9 +115,8 @@ class FriendTalkMessage extends MessageAbstract
             'adFlag' => $this->adFlag,
             'wide' => $this->wide,
             'adult' => $this->adult,
-//            'additionalContent',
             'header' => $this->header,
-//            'carousel',
+
             'replaceSms' => $this->replaceSms,
             'smsSubject' => $this->smsTitle,
             'smsContent' => $this->smsContent,

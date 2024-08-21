@@ -8,9 +8,9 @@ class SmsMessage extends MessageAbstract
 {
     private string $campaignType = 'MESSAGE'; // MESSAGE | ADVERTISE | ELECTION
     private string $messageType = 'SMS'; // SMS | LMS | MMS
-    private string|null $title = null; //
+    private string|null $subject = null; //
     private string $content;
-    private array $images = [];
+    private array $files = [];
 
 
     /**
@@ -26,12 +26,12 @@ class SmsMessage extends MessageAbstract
 
     /**
      * @brief Optional
-     * @param string|null $title
+     * @param string|null $subject
      * @return $this
      */
-    public function title(string $title = null): static
+    public function subject(string $subject = null): static
     {
-        $this->title = $title;
+        $this->subject = $subject;
         return $this;
     }
 
@@ -61,26 +61,28 @@ class SmsMessage extends MessageAbstract
 
     /**
      * @breif Optional | Default Value = []
-     * @param array $images
+     * @param array $files
      * @return $this
      */
-    public function images(array $images = []): static
+    public function files(array $files = []): static
     {
-        $this->images = $images;
+        $this->files = $files;
         return $this;
     }
 
     public function toArray(): array
     {
         return [
-            "messageCampaignType" => $this->campaignType,
-            "messageTranType" => $this->messageType,
-            "messageTranScheduleType" => $this->scheduleType,
-            "messageTranAt" => $this->at,
-            "messageTranSubject" => $this->title,
-            "messageTranMsg" => $this->content,
-            "images" => $this->images,
+            "campaignType" => $this->campaignType,
+            "messageType" => $this->messageType,
+            "scheduleType" => $this->scheduleType,
+            "at" => $this->at,
+            "subject" => $this->subject,
+            "content" => $this->content,
+            "files" => $this->files,
             "receivers" => $this->to
         ];
     }
+
+
 }

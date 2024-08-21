@@ -3,6 +3,7 @@
 namespace Techigh\SendgoNotification;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
@@ -13,18 +14,19 @@ class SendGo
     protected string $url;
     protected string $uri;
     protected string $endpoint;
-    protected bool $debug = false;
 
     protected array $headers;
     protected string $accessKey;
     protected string $secretKey;
-    protected string $senderKey;
+    protected string|null $senderKey;
+    protected string|null $kakaoSenderKey;
     protected SendGoAttributeInterface $attribute;
 
 
     public function __construct()
     {
         $this->initializeKeys()
+            ->initializeSenderKeys()
             ->initializeApiUrl()
             ->initializeHeaders()
             ->initializeHttp()
@@ -34,7 +36,10 @@ class SendGo
     private function debug(): void
     {
         if (config('sendgo.debug') == 'true') {
-            $this->debug = true;
+            $this->client->replaceHeaders(
+                $this->headers + [
+                    'debug' => true
+                ]);
             $this->client->withOptions(['verify' => false]);
         }
     }
@@ -54,10 +59,17 @@ class SendGo
     private function initializeHeaders(): static
     {
         $this->headers = [
-//            'Authorization' => 'Basic ' . base64_encode($this->secretKey . ':'),
             'Content-Type' => config('sendgo.content_type'),
+            'Authorization' => $this->makeBasicAuthorization(),
+            'senderKey' => $this->senderKey,
+            'kakaoSenderKey' => $this->kakaoSenderKey
         ];
         return $this;
+    }
+
+    private function makeBasicAuthorization(): string
+    {
+        return 'Basic ' . base64_encode(sprintf('%s:%s', $this->accessKey, $this->secretKey));
     }
 
     /**
@@ -67,6 +79,13 @@ class SendGo
     {
         $this->endpoint = config('sendgo.endpoint');
         $this->url = $this->endpoint;
+        return $this;
+    }
+
+    private function initializeSenderKeys(): static
+    {
+        $this->senderKey = config('sendgo.sms.sender_key');
+        $this->kakaoSenderKey = config('sendgo.kakao.sender_key');
         return $this;
     }
 
@@ -98,11 +117,12 @@ class SendGo
     protected function handleException($response)
     {
         $body = json_decode($response->body(), true);
+        Log::debug($body);
         if ($response->status() === 422) {
             $errors = $body['errors'];
             $errorsKey = array_keys($errors);
             throw new SendGoException(implode(', ', $errorsKey), $body['code']);
         }
-        throw new SendGoException($body['message'], $body['code']);
+        throw new SendGoException($body['code']);
     }
 }

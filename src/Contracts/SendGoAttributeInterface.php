@@ -8,5 +8,4 @@ interface SendGoAttributeInterface
 
     public function initializeUri();
 
-    public function initializeSenderKey();
 }

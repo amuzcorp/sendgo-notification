@@ -2,7 +2,6 @@
 
 namespace Techigh\SendgoNotification\Attributes\Sms;
 
-use Illuminate\Support\Facades\Log;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
 use Techigh\SendgoNotification\SendGo;
@@ -14,8 +13,7 @@ class Sms extends SendGo implements SendGoAttributeInterface
     public function __construct()
     {
         parent::__construct();
-        $this->initializeSenderKey()
-            ->initializeUri();
+        $this->initializeUri();
     }
 
     public function initializeUri(): static
@@ -24,11 +22,6 @@ class Sms extends SendGo implements SendGoAttributeInterface
         return $this;
     }
 
-    public function initializeSenderKey(): static
-    {
-        $this->senderKey = config('sendgo.sms.sender_key');
-        return $this;
-    }
 
     /**
      * @throws SendGoException
@@ -40,12 +33,8 @@ class Sms extends SendGo implements SendGoAttributeInterface
         }
         $body = $params + [
                 'senderKey' => $this->senderKey,
-                'debug' => $this->debug
             ];
-        Log::debug($this->createEndPoint('send'));
-        Log::debug(json_encode($body));
         $response = $this->client->post($this->createEndPoint('send'), $body);
-        Log::debug($response);
         if ($response->failed()) {
             $this->handleException($response);
         }

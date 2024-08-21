@@ -44,8 +44,8 @@ class AlimTalkMessage extends MessageAbstract
             $this->smsTitle = null;
         }
         return [
-            'messageTranAt' => $this->at,
-            "messageTranScheduleType" => $this->scheduleType,
+            'at' => $this->at,
+            "scheduleType" => $this->scheduleType,
             'templateCode' => $this->templateCode,
             'replaceSms' => $this->replaceSms,
             'smsSubject' => $this->smsTitle,

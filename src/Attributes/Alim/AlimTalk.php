@@ -14,21 +14,13 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
     public function __construct()
     {
         parent::__construct();
-        $this->initializeSenderKey()
-            ->initializeUri();
+        $this->initializeUri();
     }
 
 
     public function initializeUri(): static
     {
         $this->uri = '/notice';
-        return $this;
-    }
-
-    public function initializeSenderKey(): static
-    {
-        $this->senderKey = config('sendgo.sms.sender_key');
-        $this->kakaoSenderKey = config('sendgo.kakao.sender_key');
         return $this;
     }
 
@@ -43,7 +35,6 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
         $body = $params + [
                 'kakaoSenderKey' => $this->kakaoSenderKey,
                 'senderKey' => $this->senderKey,
-                'debug' => $this->debug
             ];
         Log::debug($this->createEndPoint('send'));
         Log::debug(json_encode($body));
