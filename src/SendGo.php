@@ -98,7 +98,7 @@ class SendGo
 
     protected function validateKeys(): bool
     {
-        return true;
+        return !empty($this->accessKey) && !empty($this->secretKey);
     }
 
     /**

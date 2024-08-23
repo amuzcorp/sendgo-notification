@@ -9,7 +9,6 @@ use Techigh\SendgoNotification\SendGo;
 
 class AlimTalk extends SendGo implements SendGoAttributeInterface
 {
-    protected string $kakaoSenderKey;
 
     public function __construct()
     {
@@ -20,7 +19,7 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
 
     public function initializeUri(): static
     {
-        $this->uri = '/notice';
+        $this->uri = '/v1/notification/notice';
         return $this;
     }
 
@@ -30,7 +29,7 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
     public function send(array $params): void
     {
         if (!$this->validateKeys()) {
-//            throw SensException::InvalidNCPTokens('NCP tokens are invalid.');
+            throw new SendGoException('Invalid Access Key, Secret Key');
         }
         $body = $params + [
                 'kakaoSenderKey' => $this->kakaoSenderKey,
