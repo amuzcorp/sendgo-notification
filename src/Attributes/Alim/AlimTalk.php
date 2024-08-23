@@ -35,10 +35,7 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
                 'kakaoSenderKey' => $this->kakaoSenderKey,
                 'senderKey' => $this->senderKey,
             ];
-        Log::debug($this->createEndPoint('send'));
-        Log::debug(json_encode($body));
         $response = $this->client->post($this->createEndPoint('send'), $body);
-        Log::debug($response);
         if ($response->failed()) {
             $this->handleException($response);
         }

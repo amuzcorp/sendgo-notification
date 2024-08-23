@@ -19,7 +19,7 @@ class Sms extends SendGo implements SendGoAttributeInterface
 
     public function initializeUri(): static
     {
-        $this->uri = '/v1/notification/sms';
+        $this->uri = '/v1/notificationcd ../sms';
         return $this;
     }
 

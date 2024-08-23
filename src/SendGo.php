@@ -121,7 +121,7 @@ class SendGo
         if ($response->status() === 422) {
             $errors = $body['errors'];
             $errorsKey = array_keys($errors);
-            throw new SendGoException(implode(', ', $errorsKey), $body['code']);
+            throw new SendGoException(implode(', ', $errorsKey));
         }
         throw new SendGoException($body['code']);
     }
