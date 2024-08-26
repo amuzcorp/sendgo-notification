@@ -22,6 +22,8 @@ class SendGo
     protected string|null $kakaoSenderKey;
     protected SendGoAttributeInterface $attribute;
 
+    protected string $token;
+
 
     public function __construct()
     {
@@ -30,18 +32,41 @@ class SendGo
             ->initializeApiUrl()
             ->initializeHeaders()
             ->initializeHttp()
-            ->debug();
+            ->token()
+            ->replaceHeaders();
     }
 
-    private function debug(): void
+    private function replaceHeaders(): static
     {
-        if (config('sendgo.debug') == 'true') {
-            $this->client->replaceHeaders(
-                $this->headers + [
-                    'debug' => true
-                ]);
-            $this->client->withOptions(['verify' => false]);
+        $this->client->replaceHeaders(
+            $this->headers + [
+                'Authorization' => $this->makeBearerAuthorization()
+            ]);
+        return $this;
+    }
+
+    private function makeBearerAuthorization(): string
+    {
+        return 'Bearer ' . base64_encode($this->token);
+    }
+
+    private function token(): static
+    {
+        $response = $this->client->replaceHeaders(
+            $this->headers + [
+                'Authorization' => $this->makeBasicAuthorization()
+            ]
+        )->post($this->url . '/v1/token');
+        $body = json_decode($response->body(), true);
+        if ($response->successful()) {
+            $this->token = $body['data']['token'];
         }
+        return $this;
+    }
+
+    private function makeBasicAuthorization(): string
+    {
+        return 'Basic ' . base64_encode(sprintf('%s:%s', $this->accessKey, $this->secretKey));
     }
 
     /**
@@ -60,16 +85,10 @@ class SendGo
     {
         $this->headers = [
             'Content-Type' => config('sendgo.content_type'),
-            'Authorization' => $this->makeBasicAuthorization(),
             'senderKey' => $this->senderKey,
-            'kakaoSenderKey' => $this->kakaoSenderKey
+            'kakaoSenderKey' => $this->kakaoSenderKey,
         ];
         return $this;
-    }
-
-    private function makeBasicAuthorization(): string
-    {
-        return 'Basic ' . base64_encode(sprintf('%s:%s', $this->accessKey, $this->secretKey));
     }
 
     /**
@@ -84,8 +103,8 @@ class SendGo
 
     private function initializeSenderKeys(): static
     {
-        $this->senderKey = config('sendgo.sms.sender_key');
-        $this->kakaoSenderKey = config('sendgo.kakao.sender_key');
+        $this->senderKey = config('sendgo.sms_sender_key');
+        $this->kakaoSenderKey = config('sendgo.kakao_sender_key');
         return $this;
     }
 
