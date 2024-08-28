@@ -60,6 +60,8 @@ class SendGo
         $body = json_decode($response->body(), true);
         if ($response->successful()) {
             $this->token = $body['data']['token'];
+        } else {
+            $this->handleException($response);
         }
         return $this;
     }
@@ -70,11 +72,27 @@ class SendGo
     }
 
     /**
+     * @throws SendGoException
+     */
+    protected function handleException($response)
+    {
+        $body = json_decode($response->body(), true);
+        Log::debug($body);
+        if ($response->status() === 422) {
+            $errors = $body['errors'];
+            $errorsKey = array_keys($errors);
+            throw new SendGoException(implode(', ', $errorsKey));
+        }
+        throw new SendGoException($body['code']);
+    }
+
+    /**
      * @return $this
      */
     protected function initializeHttp(): static
     {
         $this->client = Http::withHeaders($this->headers);
+        $this->client->withOptions(['verify' => false]);
         return $this;
     }
 
@@ -128,20 +146,5 @@ class SendGo
     protected function start(string $value, string $prefix = '/'): string
     {
         return Str::start($value, $prefix);
-    }
-
-    /**
-     * @throws SendGoException
-     */
-    protected function handleException($response)
-    {
-        $body = json_decode($response->body(), true);
-        Log::debug($body);
-        if ($response->status() === 422) {
-            $errors = $body['errors'];
-            $errorsKey = array_keys($errors);
-            throw new SendGoException(implode(', ', $errorsKey));
-        }
-        throw new SendGoException($body['code']);
     }
 }
