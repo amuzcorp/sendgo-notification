@@ -13,19 +13,15 @@ abstract class MessageAbstract
         return new static();
     }
 
+
     /**
      * @breif Required
-     * @param array|string $to
+     * @param array $to
      * @return $this
      */
-    public function to(array|string $to): static
+    public function to(array $to): static
     {
-        if (empty($to)) {
-            echo "수신 정보가 없습니다.";
-        }
-        if (is_array($to) && !array_key_exists('contact', $to)) $to = [$to];
-        else $to = [['contact' => $to]];
-        $this->to = $to;
+        $this->to = [$to];
         return $this;
     }
 

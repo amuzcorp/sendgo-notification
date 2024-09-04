@@ -31,13 +31,14 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
         if (!$this->validateKeys()) {
             throw new SendGoException('Invalid Access Key, Secret Key');
         }
-        $body = $params + [
-                'kakaoSenderKey' => $this->kakaoSenderKey,
-                'senderKey' => $this->senderKey,
-            ];
-        $response = $this->client->post($this->createEndPoint('send'), $body);
-        if ($response->failed()) {
-            $this->handleException($response);
+        try {
+            $body = $params + [
+                    'kakaoSenderKey' => $this->kakaoSenderKey,
+                    'senderKey' => $this->senderKey,
+                ];
+            $this->client->post($this->createEndPoint('send'), $body);
+        } catch (\Exception $e) {
+            throw new SendGoException($e);
         }
     }
 

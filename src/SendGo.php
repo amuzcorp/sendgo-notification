@@ -50,18 +50,21 @@ class SendGo
         return 'Bearer ' . base64_encode($this->token);
     }
 
+    /**
+     * @throws SendGoException
+     */
     private function token(): static
     {
-        $response = $this->client->replaceHeaders(
-            $this->headers + [
-                'Authorization' => $this->makeBasicAuthorization()
-            ]
-        )->post($this->url . '/v1/token');
-        $body = json_decode($response->body(), true);
-        if ($response->successful()) {
+        try {
+            $response = $this->client->replaceHeaders(
+                $this->headers + [
+                    'Authorization' => $this->makeBasicAuthorization()
+                ]
+            )->post($this->url . '/v1/token');
+            $body = json_decode($response->body(), true);
             $this->token = $body['data']['token'];
-        } else {
-            $this->handleException($response);
+        } catch (\Exception $e) {
+            throw new SendGoException($e);
         }
         return $this;
     }
@@ -69,21 +72,6 @@ class SendGo
     private function makeBasicAuthorization(): string
     {
         return 'Basic ' . base64_encode(sprintf('%s:%s', $this->accessKey, $this->secretKey));
-    }
-
-    /**
-     * @throws SendGoException
-     */
-    protected function handleException($response)
-    {
-        $body = json_decode($response->body(), true);
-        Log::debug($body);
-        if ($response->status() === 422) {
-            $errors = $body['errors'];
-            $errorsKey = array_keys($errors);
-            throw new SendGoException(implode(', ', $errorsKey));
-        }
-        throw new SendGoException($body['code']);
     }
 
     /**
