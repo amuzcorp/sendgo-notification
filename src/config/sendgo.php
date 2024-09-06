@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'endpoint' => 'https://sendgo.io/api',
+    'endpoint' => env('SENDGO_ENDPOINT'),
     'access_key' => env('SENDGO_ACCESS_KEY'),
     'secret_key' => env('SENDGO_SECRET_KEY'),
     'sms_sender_key' => env('SENDGO_SENDER_KEY'),
