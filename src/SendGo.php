@@ -62,7 +62,11 @@ class SendGo
                 ]
             )->post($this->url . '/v1/token');
             $body = json_decode($response->body(), true);
-            $this->token = $body['data']['token'];
+            if ($response->successful()) {
+                $this->token = $body['data']['token'];
+            } else {
+                throw new SendGoException($body['code']);
+            }
         } catch (\Exception $e) {
             throw new SendGoException($e);
         }
