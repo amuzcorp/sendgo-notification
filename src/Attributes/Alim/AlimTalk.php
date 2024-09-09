@@ -19,7 +19,7 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
 
     public function initializeUri(): static
     {
-        $this->uri = '/v1/notification/notice';
+        $this->uri = '/v1/notices';
         return $this;
     }
 
@@ -28,17 +28,21 @@ class AlimTalk extends SendGo implements SendGoAttributeInterface
      */
     public function send(array $params): void
     {
-        if (!$this->validateKeys()) {
-            throw new SendGoException('Invalid Access Key, Secret Key');
+        if (!$this->validateToken()) {
+            throw new SendGoException('Empty Token');
         }
         try {
             $body = $params + [
                     'kakaoSenderKey' => $this->kakaoSenderKey,
                     'senderKey' => $this->senderKey,
                 ];
-            $this->client->post($this->createEndPoint('send'), $body);
+            $response = $this->client->post($this->createEndPoint('send'), $body);
         } catch (\Exception $e) {
             throw new SendGoException($e);
+        }
+        $body = json_decode($response->body(), true);
+        if ($response->failed()) {
+            throw new SendGoException($body['code']);
         }
     }
 

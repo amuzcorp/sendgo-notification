@@ -55,22 +55,31 @@ class SendGo
      */
     private function token(): static
     {
+        if (!$this->validateKeys()) {
+            throw new SendGoException('Empty Access Key');
+        }
+
         try {
             $response = $this->client->replaceHeaders(
                 $this->headers + [
                     'Authorization' => $this->makeBasicAuthorization()
                 ]
             )->post($this->url . '/v1/token');
-            $body = json_decode($response->body(), true);
-            if ($response->successful()) {
-                $this->token = $body['data']['token'];
-            } else {
-                throw new SendGoException($body['code']);
-            }
         } catch (\Exception $e) {
-            throw new SendGoException($e);
+            throw new SendGoException($e->getMessage());
+        }
+        $body = json_decode($response->body(), true);
+        if ($response->failed()) {
+            throw new SendGoException($body['code']);
+        } else {
+            $this->token = $body['data']['token'];
         }
         return $this;
+    }
+
+    protected function validateKeys(): bool
+    {
+        return !empty($this->accessKey) && !empty($this->secretKey);
     }
 
     private function makeBasicAuthorization(): string
@@ -84,7 +93,6 @@ class SendGo
     protected function initializeHttp(): static
     {
         $this->client = Http::withHeaders($this->headers);
-        $this->client->withOptions(['verify' => false]);
         return $this;
     }
 
@@ -95,8 +103,6 @@ class SendGo
     {
         $this->headers = [
             'Content-Type' => config('sendgo.content_type'),
-            'senderKey' => $this->senderKey,
-            'kakaoSenderKey' => $this->kakaoSenderKey,
         ];
         return $this;
     }
@@ -125,9 +131,9 @@ class SendGo
         return $this;
     }
 
-    protected function validateKeys(): bool
+    protected function validateToken(): bool
     {
-        return !empty($this->accessKey) && !empty($this->secretKey);
+        return !empty($this->token);
     }
 
     /**
