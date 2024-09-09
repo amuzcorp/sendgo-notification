@@ -4,7 +4,9 @@
     "license": "MIT",
     "keywords": [
         "notification",
-        "message"
+        "message",
+        "kakao",
+        "laravel"
     ],
     "autoload": {
         "psr-4": {
