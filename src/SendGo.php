@@ -112,8 +112,8 @@ class SendGo
      */
     private function initializeApiUrl(): static
     {
-        $this->endpoint = config('sendgo.endpoint');
-        $this->url = $this->endpoint;
+        $this->endpoint = config('sendgo.url');
+        $this->url = $this->endpoint . '/api';
         return $this;
     }
 
