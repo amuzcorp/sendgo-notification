@@ -1,10 +1,10 @@
 # AlimTalk
 
 ```shell
-$ php artisan make:notification SendGoNotification
+php artisan make:notification SendGoNotification
 ```
 
-#### 1) Request to send a AlimTalk for Single Phone Number
+#### 1) Request to send a SMS for Contact
 
 ```php
 <?php
@@ -14,8 +14,8 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
-use Techigh\SendgoNotification\Attributes\Sms\SmsMessage;
-use Techigh\SendgoNotification\Attributes\Sms\SmsChannel;
+use Techigh\SendgoNotification\Attributes\Alim\AlimTalkMessage;
+use Techigh\SendgoNotification\Attributes\Alim\AlimTalkChannel;
 
 class SendGoNotification extends Notification
 {
@@ -28,78 +28,25 @@ class SendGoNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return [SmsChannel::class];
+        return [AlimTalkChannel::class];
     }
 
 
     /**
      * Get the mail representation of the notification.
      */
-    public function toSms(object $notifiable): SmsMessage
+    public function toAlim(object $notifiable): AlimTalkMessage
     {
-        return SmsMessage::make()
-            ->campaignType('MESSAGE')
-            ->messageType('SMS')
-            ->scheduleType('DIRECTLY')
-            ->content('Welcome SendGo Sms')
-            ->to($notifiable->phone)
-            ->at();
-    }
-}
-```
-
-```php
-use App\Models\User;
-$user = User::query()->first();
-$user->notify(new SendGoNotification());
-```
-
-#### 2) Request to send a SMS for Single Contact
-
-```php
-<?php
-
-namespace App\Notifications;
-
-use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
-use Techigh\SendgoNotification\Attributes\Sms\SmsMessage;
-use Techigh\SendgoNotification\Attributes\Sms\SmsChannel;
-
-class SendGoNotification extends Notification
-{
-    use Queueable;
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return [SmsChannel::class];
-    }
-
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toSms(object $notifiable): SmsMessage
-    {
-        return SmsMessage::make()
-            ->campaignType('MESSAGE')
-            ->messageType('SMS')
-            ->scheduleType('DIRECTLY')
-            ->content('Welcome SendGo Sms')
+        return AlimTalkMessage::make()
+            ->templateCode('XX-XXXX') // REQUIRED
+            ->scheduleType('DIRECTLY') // OPTIONAL, default = 'DIRECTLY'
+            ->replaceSms('N') // OPTIONAL, default = 'N', replace sms when failed to send
+            ->smsTitle('Title for AlimTalk') // OPTIONAL, default = null, REQUIRED when replace sms is 'Y'  
+            ->smsContent('Content for AlimTalk') // OPTIONAL, default = null, REQUIRED when replace sms is 'Y'
             ->to([
-            'contact' => $notifiable->phone, 
-            'name' => $notifiable->name, 
-            'var1' => $notifiable->variable1,
-            'var2' => $notifiable->variable2,
-            'var3' => $notifiable->variable3,
-            'var4' => $notifiable->variable4,
-            'var5' => $notifiable->variable5,
+                'contact' => $notifiable->phone, 
+                'name' => $notifiable->name, 
+                'var1' => $notifiable->variable1,
             ])
             ->at();
     }

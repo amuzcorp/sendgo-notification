@@ -5,26 +5,26 @@
 You can install the package using composer
 
 ```shell
-$ composer require techigh/sendgo-notification
+composer require techigh/sendgo-notification
 ```
 
 ### `.env`
 
 ```bash
-SENDGO_ACCESS_KEY=
-SENDGO_SECRET_KEY=
-SENDGO_SENDER_KEY=
-SENDGO_KAKAO_SENDER_KEY=
+SENDGO_ACCESS_KEY=your_access_key
+SENDGO_SECRET_KEY=your_secret_key
+SENDGO_SENDER_KEY=your_sms_sender_key
+SENDGO_KAKAO_SENDER_KEY=your_kakao_sender_key
 ```
 
 ### Config
 
 ```shell
-$ php artisan vendor:publish --tag=sendgo
+php artisan vendor:publish --tag=sendgo
 ```
 
 ```shell
-$ composer dump-autoload
+composer dump-autoload
 ```
 
 ---
