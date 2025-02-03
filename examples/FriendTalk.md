@@ -35,8 +35,8 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
-use Techigh\SendgoNotification\Attributes\Alim\AlimTalkMessage;
-use Techigh\SendgoNotification\Attributes\Alim\AlimTalkChannel;
+use Techigh\SendgoNotification\Attributes\Friend\FriendTalkChannel;
+use Techigh\SendgoNotification\Attributes\Friend\FriendTalkMessage;
 
 class SendGoNotification extends Notification
 {
@@ -56,7 +56,7 @@ class SendGoNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toFriend(object $notifiable): AlimTalkMessage
+    public function toFriend(object $notifiable): FriendTalkMessage
     {
         return FriendTalkMessage::make()
             ->scheduleType('DIRECTLY') // OPTIONAL, default = 'DIRECTLY'

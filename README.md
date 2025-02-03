@@ -10,9 +10,12 @@ composer require techigh/sendgo-notification
 
 ### `.env`
 
-- `.env` 에 아래의 환경변수가 추가되어야 합니다. 아래의 환경변수들은 샌드고(www.sendgo.io)-[연동하기]-[연동 정보]에서 승인된 연동에 관해 발급 받을 수 있습니다.
-- `SENDGO_ACCESS_KEY`와 `SENDGO_SECRECT_KEY`는 [연동 정보] 탭의 API Keys 에서 확인할 수 있습니다.
-- `SENDGO_SENDER_KEY`와 `SENDGO_KAKAO_SENDER_KEY`는 [연동 정보] 탭의 발신 Keys 에서 해당 발신번호와 카카오 채널에 탭에서 확인할 수 있습니다.
+- `.env` 에 아래의 환경변수가 추가되어야 합니다. 아래의 환경변수들은 <a href="https://www.sendgo.io">샌드고-[연동하기]-[연동 정보]</a>에서 승인된 연동에 관해 발급 받을 수
+  있습니다.
+- `SENDGO_ACCESS_KEY`와 `SENDGO_SECRECT_KEY`는 <a href="www.sendgo.io/applications">[연동 정보]</a> 탭의 **API Keys** 에서 확인할 수
+  있습니다.
+- `SENDGO_SENDER_KEY`와 `SENDGO_KAKAO_SENDER_KEY`는 <a href="www.sendgo.io/applications">[연동 정보]</a> 탭의 **발신 Keys** 에서 해당
+  발신번호와 카카오 채널에 탭에서 확인할 수 있습니다.
 
 ```bash
 SENDGO_ACCESS_KEY=your_access_key
