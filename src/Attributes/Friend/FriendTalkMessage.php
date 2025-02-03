@@ -7,7 +7,7 @@ use Techigh\SendgoNotification\Contracts\MessageAbstract;
 class FriendTalkMessage extends MessageAbstract
 {
     private array $buttons = [];
-    private string $messageType = 'FT'; // FT | FI | FW
+    private string $messageType = 'FT'; // FT | FI | FW | FL | FM | FC | FA | FP
     private string $wide = 'N'; // Y | N
     private string $adult = 'N'; // Y | N
     private string $adFlag = 'Y'; // Y | N
