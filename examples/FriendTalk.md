@@ -16,7 +16,7 @@ php artisan make:notification SendGoNotification
     - messageType → 'FT' (텍스트), 'FI' (이미지), 'FW' (와이드 이미지), 'FL' (와이드 아이템 리스트), 'FM' (커머스), 'FC' (캐러셀 피드), 'FA' (캐러셀
       커머스), 'FP' (프리미엄 동영상) 중 하나
     - content -> 친구톡 메시지 내용 (필수)
-    - image -> 친구톡 메시지 내용 중 이미지, messageType 이 'FI', 'FW', 'FL', 'FM' (옵션), file 형태
+    - image -> 친구톡 메시지 내용 중 이미지, messageType 이 'FI', 'FW', 'FL'일 경우 필수 (옵션), file 형태
     - imageUrl -> 친구톡 메시지 내용 중 이미지 url (옵션), string 형태
     - imageLink -> 친구톡 메시지 내용 중 이미지 클릭시 이동할 링크값 (옵션), string 형태
     - buttons -> 친구톡 메시지 내용 중 버튼들의 정보에 대한 배열값 (옵션)
@@ -26,6 +26,7 @@ php artisan make:notification SendGoNotification
     - smsTitle → 대체 문자 메시지 제목, 대체 문자 발송시 필수
     - smsContent → 대체 문자 메시지 내용, 대체 문자 발송시 필수
     - to → 수신자 정보 (전화번호, 이름, 추가 변수 포함 가능)
+    - at -> 전송 시각, scheduleType이 'SCHEDULED'일 경우 필수
 
 ```php
 <?php

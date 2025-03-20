@@ -18,6 +18,7 @@ php artisan make:notification SendGoNotification
     - smsTitle → 대체 문자 메시지 제목, 대체 문자 발송시 필수
     - smsContent → 대체 문자 메시지 내용, 대체 문자 발송시 필수
     - to → 수신자 정보 (전화번호, 이름, 추가 변수 포함 가능)
+    - at -> 전송 시각, scheduleType이 'SCHEDULED'일 경우 필수
 
 ```php
 <?php

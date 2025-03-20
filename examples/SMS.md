@@ -27,6 +27,7 @@ $user->notify(new SendGoNotification());
     - subject → LMS/MMS 발송 시 필수
     - files → MMS 발송 시 필수 (최대 3개 파일 가능)
     - to → 수신자 정보 (전화번호, 이름, 추가 변수 포함 가능)
+    - at -> 전송 시각, scheduleType이 'SCHEDULED'일 경우 필수
 
 ```php
 <?php
