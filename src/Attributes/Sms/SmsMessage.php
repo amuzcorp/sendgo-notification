@@ -80,7 +80,7 @@ class SmsMessage extends MessageAbstract
             "subject" => $this->subject,
             "content" => $this->content,
             "files" => $this->files,
-            "receivers" => $this->to
+            "contacts" => $this->to
         ];
     }
 

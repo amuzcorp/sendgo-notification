@@ -50,7 +50,7 @@ class AlimTalkMessage extends MessageAbstract
             'replaceSms' => $this->replaceSms,
             'smsSubject' => $this->smsTitle,
             'smsContent' => $this->smsContent,
-            'receivers' => $this->to,
+            'contacts' => $this->to,
         ];
     }
 }
