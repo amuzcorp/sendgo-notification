@@ -1,7 +1,7 @@
 {
     "name": "techigh/sendgo-notification",
     "description": "Notification Package for Laravel",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "license": "MIT",
     "keywords": [
         "notification",
