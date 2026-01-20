@@ -36,7 +36,7 @@ class Sms extends SendGo implements SendGoAttributeInterface
             $body = $params + [
                     'senderKey' => $this->senderKey,
                 ];
-            $response = $this->client->post($this->createEndPoint('send'), $body);
+            $response = $this->client()->post($this->createEndPoint('send'), $body);
         } catch (\Exception $e) {
             throw new SendGoException($e);
         }

@@ -3,27 +3,26 @@
 namespace Techigh\SendgoNotification;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
 
 class SendGo
 {
-    protected $client;
     protected string $url;
-    protected string $uri;
     protected string $endpoint;
+    protected ?string $uri = null;
 
     protected array $headers;
+
     protected string $accessKey;
     protected string $secretKey;
-    protected string|null $senderKey;
-    protected string|null $kakaoSenderKey;
+    protected ?string $senderKey;
+    protected ?string $kakaoSenderKey;
+
     protected SendGoAttributeInterface $attribute;
 
-    protected string $token;
-
+    protected ?string $token = null;
 
     public function __construct()
     {
@@ -31,49 +30,108 @@ class SendGo
             ->initializeSenderKeys()
             ->initializeApiUrl()
             ->initializeHeaders()
-            ->initializeHttp()
-            ->token()
-            ->replaceHeaders();
+            ->issueToken();
     }
 
-    private function replaceHeaders(): static
-    {
-        $this->client->replaceHeaders(
-            $this->headers + [
-                'Authorization' => $this->makeBearerAuthorization()
-            ]);
-        return $this;
-    }
-
-    private function makeBearerAuthorization(): string
-    {
-        return 'Bearer ' . base64_encode($this->token);
-    }
+    /* -----------------------------------------------------------------
+     | Token
+     |-----------------------------------------------------------------*/
 
     /**
      * @throws SendGoException
      */
-    private function token(): static
+    protected function issueToken(): void
     {
         if (!$this->validateKeys()) {
             throw new SendGoException('Empty Access Key');
         }
 
-        try {
-            $response = $this->client->replaceHeaders(
-                $this->headers + [
-                    'Authorization' => $this->makeBasicAuthorization()
-                ]
-            )->post($this->url . '/v1/token');
-        } catch (\Exception $e) {
-            throw new SendGoException($e->getMessage());
+        $response = Http::withHeaders([
+            'Content-Type'  => $this->headers['Content-Type'],
+            'Authorization' => $this->makeBasicAuthorization(),
+        ])->post($this->url . '/v1/token');
+
+        $body = $response->json();
+
+        if ($response->failed() || empty($body['data']['token'])) {
+            throw new SendGoException($body['code'] ?? 'Token request failed');
         }
-        $body = json_decode($response->body(), true);
-        if ($response->failed()) {
-            throw new SendGoException($body['code']);
-        } else {
-            $this->token = $body['data']['token'];
+
+        $this->token = $body['data']['token'];
+    }
+
+    protected function validateToken(): bool
+    {
+        return !empty($this->token);
+    }
+
+    /* -----------------------------------------------------------------
+     | HTTP Client
+     |-----------------------------------------------------------------*/
+
+    /**
+     * Bearer 인증이 포함된 새 Http Client 반환
+     *
+     * @throws SendGoException
+     */
+    protected function client()
+    {
+        if (!$this->validateToken()) {
+            throw new SendGoException('Invalid Bearer Authorization: token not found.');
         }
+
+        return Http::withHeaders([
+            'Content-Type'  => $this->headers['Content-Type'],
+            'Authorization' => $this->makeBearerAuthorization(),
+        ]);
+    }
+
+    /* -----------------------------------------------------------------
+     | Authorization
+     |-----------------------------------------------------------------*/
+
+    protected function makeBasicAuthorization(): string
+    {
+        return 'Basic ' . base64_encode(
+            sprintf('%s:%s', $this->accessKey, $this->secretKey)
+        );
+    }
+
+    protected function makeBearerAuthorization(): string
+    {
+        return 'Bearer ' . base64_encode($this->token);
+    }
+
+    /* -----------------------------------------------------------------
+     | Initialize
+     |-----------------------------------------------------------------*/
+
+    protected function initializeHeaders(): static
+    {
+        $this->headers = [
+            'Content-Type' => config('sendgo.content_type'),
+        ];
+        return $this;
+    }
+
+    protected function initializeApiUrl(): static
+    {
+        $this->endpoint = config('sendgo.url');
+        $this->url = $this->endpoint . '/api';
+        return $this;
+    }
+
+    protected function initializeSenderKeys(): static
+    {
+        $this->senderKey = config('sendgo.sms_sender_key');
+        $this->kakaoSenderKey = config('sendgo.kakao_sender_key');
+        return $this;
+    }
+
+    protected function initializeKeys(): static
+    {
+        $this->accessKey = config('sendgo.access_key');
+        $this->secretKey = config('sendgo.secret_key');
         return $this;
     }
 
@@ -82,65 +140,10 @@ class SendGo
         return !empty($this->accessKey) && !empty($this->secretKey);
     }
 
-    private function makeBasicAuthorization(): string
-    {
-        return 'Basic ' . base64_encode(sprintf('%s:%s', $this->accessKey, $this->secretKey));
-    }
+    /* -----------------------------------------------------------------
+     | Utils
+     |-----------------------------------------------------------------*/
 
-    /**
-     * @return $this
-     */
-    protected function initializeHttp(): static
-    {
-        $this->client = Http::withHeaders($this->headers);
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    private function initializeHeaders(): static
-    {
-        $this->headers = [
-            'Content-Type' => config('sendgo.content_type'),
-        ];
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    private function initializeApiUrl(): static
-    {
-        $this->endpoint = config('sendgo.url');
-        $this->url = $this->endpoint . '/api';
-        return $this;
-    }
-
-    private function initializeSenderKeys(): static
-    {
-        $this->senderKey = config('sendgo.sms_sender_key');
-        $this->kakaoSenderKey = config('sendgo.kakao_sender_key');
-        return $this;
-    }
-
-    private function initializeKeys(): static
-    {
-        $this->accessKey = config('sendgo.access_key');
-        $this->secretKey = config('sendgo.secret_key');
-        return $this;
-    }
-
-    protected function validateToken(): bool
-    {
-        return !empty($this->token);
-    }
-
-    /**
-     * @param string $value
-     * @param string $prefix
-     * @return string
-     */
     protected function start(string $value, string $prefix = '/'): string
     {
         return Str::start($value, $prefix);
