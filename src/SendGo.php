@@ -2,7 +2,9 @@
 
 namespace Techigh\SendgoNotification;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
@@ -38,6 +40,8 @@ class SendGo
      |-----------------------------------------------------------------*/
 
     /**
+     * 캐시에서 토큰을 가져오거나 새로 발급받습니다
+     * 
      * @throws SendGoException
      */
     protected function issueToken(): void
@@ -46,7 +50,35 @@ class SendGo
             throw new SendGoException('Empty Access Key');
         }
 
-        $response = Http::withHeaders([
+        $cacheKey = $this->getTokenCacheKey();
+
+        try {
+            // 캐시에서 토큰 조회
+            $this->token = Cache::remember($cacheKey, now()->addMinutes(50), function () {
+                return $this->requestNewToken();
+            });
+
+            if (empty($this->token)) {
+                throw new SendGoException('Failed to get token from cache');
+            }
+        } catch (\Exception $e) {
+            Log::error('SendGo Token Issue Failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new SendGoException('Token issue failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * API 서버에 새 토큰을 요청합니다
+     * 
+     * @return string
+     * @throws SendGoException
+     */
+    protected function requestNewToken(): string
+    {
+        $response = Http::timeout(10)->withHeaders([
             'Content-Type'  => $this->headers['Content-Type'],
             'Authorization' => $this->makeBasicAuthorization(),
         ])->post($this->url . '/v1/token');
@@ -54,10 +86,28 @@ class SendGo
         $body = $response->json();
 
         if ($response->failed() || empty($body['data']['token'])) {
-            throw new SendGoException($body['code'] ?? 'Token request failed');
+            $errorCode = $body['code'] ?? 'Unknown';
+            $errorMessage = $body['message'] ?? 'Token request failed';
+
+            Log::error('SendGo Token Request Failed', [
+                'status' => $response->status(),
+                'code' => $errorCode,
+                'message' => $errorMessage,
+                'body' => $body,
+            ]);
+
+            throw new SendGoException("Token request failed: {$errorCode} - {$errorMessage}");
         }
 
-        $this->token = $body['data']['token'];
+        return $body['data']['token'];
+    }
+
+    /**
+     * 토큰 캐시 키를 생성합니다
+     */
+    protected function getTokenCacheKey(): string
+    {
+        return 'sendgo_token_' . md5($this->accessKey . $this->secretKey);
     }
 
     protected function validateToken(): bool
