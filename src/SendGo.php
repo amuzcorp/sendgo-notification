@@ -186,6 +186,10 @@ class SendGo
 
     protected function makeBearerAuthorization(): string
     {
+        if ($this->apiVersion === 'v2') {
+            return 'Bearer ' . $this->token;
+        }
+
         return 'Bearer ' . base64_encode($this->token);
     }
 
