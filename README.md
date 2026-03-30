@@ -695,19 +695,14 @@ SendGo는 회원 가입 시 **무료 크레딧**을 제공하여 서비스를 �
 ---
 
 ## 📚 추가 자료
-
-- [SendGo 공식 문서](https://www.sendgo.io/docs)
 - [Laravel Notification 공식 문서](https://laravel.com/docs/notifications)
-- [카카오 알림톡 가이드](https://www.sendgo.io/docs/alimtalk)
-- [카카오 친구톡 가이드](https://www.sendgo.io/docs/friendtalk)
 
 ---
 
 ## 📞 문의 및 지원
 
-- **이메일**: techigh@amuz.co.kr
+- **이메일**: support@sendgo.io
 - **GitHub Issues**: [https://github.com/techigh/sendgo-notification/issues](https://github.com/techigh/sendgo-notification/issues)
-- **SendGo 고객센터**: [https://www.sendgo.io/support](https://www.sendgo.io/support)
 
 문제가 발생하거나 기능 요청이 있으시면 언제든지 연락주세요!
 

@@ -6,6 +6,7 @@ return [
     'secret_key' => env('SENDGO_SECRET_KEY'),
     'sms_sender_key' => env('SENDGO_SENDER_KEY'),
     'kakao_sender_key' => env('SENDGO_KAKAO_SENDER_KEY'),
+    'api_version' => env('SENDGO_API_VERSION', 'v1'),
     'content_type' => 'application/json',
     'accept' => 'application/json',
 ];

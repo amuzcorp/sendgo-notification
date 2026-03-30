@@ -2,24 +2,21 @@
 
 namespace Techigh\SendgoNotification\Attributes\Friend;
 
-use Illuminate\Support\Facades\Log;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
 use Techigh\SendgoNotification\SendGo;
 
 class FriendTalk extends SendGo implements SendGoAttributeInterface
 {
-
     public function __construct()
     {
         parent::__construct();
         $this->initializeUri();
     }
 
-
     public function initializeUri(): static
     {
-        $this->uri = '/v1/friends';
+        $this->uri = "/{$this->apiVersion}/friends";
         return $this;
     }
 
@@ -28,22 +25,11 @@ class FriendTalk extends SendGo implements SendGoAttributeInterface
      */
     public function send(array $params): void
     {
-        if (!$this->validateToken()) {
-            throw new SendGoException('Empty Token');
-        }
-        try {
-            $body = $params + [
-                    'kakaoSenderKey' => $this->kakaoSenderKey,
-                    'senderKey' => $this->senderKey,
-                ];
-            $response = $this->client()->post($this->createEndPoint('send'), $body);
-        } catch (\Exception $e) {
-            throw new SendGoException($e);
-        }
-        $body = json_decode($response->body(), true);
-        if ($response->failed()) {
-            throw new SendGoException($body['code']);
-        }
+        $body = $params + [
+            'kakaoSenderKey' => $this->kakaoSenderKey,
+            'senderKey'      => $this->senderKey,
+        ];
+        $this->performSend($this->createEndpoint('send'), $body);
     }
 
     public function createEndpoint(?string $endpoint, bool $withUri = true): string

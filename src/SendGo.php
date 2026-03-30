@@ -4,7 +4,6 @@ namespace Techigh\SendgoNotification;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Techigh\SendgoNotification\Contracts\SendGoAttributeInterface;
 use Techigh\SendgoNotification\Exceptions\SendGoException;
@@ -13,6 +12,7 @@ class SendGo
 {
     protected string $url;
     protected string $endpoint;
+    protected string $apiVersion = 'v1';
     protected ?string $uri = null;
 
     protected array $headers;
@@ -26,10 +26,26 @@ class SendGo
 
     protected ?string $token = null;
 
+    private const ALLOWED_VERSIONS = ['v1', 'v2'];
+
+    private const V2_NO_REFRESH_CODES = [
+        'INVALID_AUTH_HEADER',
+        'INVALID_BASIC_AUTH',
+        'INVALID_BASIC_AUTH_PAYLOAD',
+        'INVALID_ACCESS_KEY',
+        'INVALID_SECRET_KEY',
+        'ACCESS_KEY_NOT_APPROVED',
+        'TEAM_REQUIRED_FOR_KAKAO',
+        'IP_NOT_ALLOWED',
+        'INVALID_SENDER_KEY',
+        'INVALID_KAKAO_SENDER_KEY',
+    ];
+
     public function __construct()
     {
         $this->initializeKeys()
             ->initializeSenderKeys()
+            ->initializeApiVersion()
             ->initializeApiUrl()
             ->initializeHeaders()
             ->issueToken();
@@ -39,11 +55,6 @@ class SendGo
      | Token
      |-----------------------------------------------------------------*/
 
-    /**
-     * 캐시에서 토큰을 가져오거나 새로 발급받습니다
-     * 
-     * @throws SendGoException
-     */
     protected function issueToken(): void
     {
         if (!$this->validateKeys()) {
@@ -52,62 +63,49 @@ class SendGo
 
         $cacheKey = $this->getTokenCacheKey();
 
-        try {
-            // 캐시에서 토큰 조회
-            $this->token = Cache::remember($cacheKey, now()->addMinutes(50), function () {
-                return $this->requestNewToken();
-            });
+        $this->token = Cache::remember($cacheKey, now()->addMinutes(50), function () {
+            return $this->requestNewToken();
+        });
 
-            if (empty($this->token)) {
-                throw new SendGoException('Failed to get token from cache');
-            }
-        } catch (\Exception $e) {
-            Log::error('SendGo Token Issue Failed', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw new SendGoException('Token issue failed: ' . $e->getMessage());
+        if (empty($this->token)) {
+            throw new SendGoException('Failed to get token from cache');
         }
     }
 
-    /**
-     * API 서버에 새 토큰을 요청합니다
-     * 
-     * @return string
-     * @throws SendGoException
-     */
     protected function requestNewToken(): string
     {
+        $tokenEndpoint = $this->buildTokenEndpoint();
+
         $response = Http::timeout(10)->withHeaders([
             'Content-Type'  => $this->headers['Content-Type'],
             'Authorization' => $this->makeBasicAuthorization(),
-        ])->post($this->url . '/v1/token');
+        ])->post($tokenEndpoint);
 
-        $body = $response->json();
+        $body = $response->json() ?? [];
 
         if ($response->failed() || empty($body['data']['token'])) {
-            $errorCode = $body['code'] ?? 'Unknown';
-            $errorMessage = $body['message'] ?? 'Token request failed';
-
-            Log::error('SendGo Token Request Failed', [
-                'status' => $response->status(),
-                'code' => $errorCode,
-                'message' => $errorMessage,
-                'body' => $body,
-            ]);
-
-            throw new SendGoException("Token request failed: {$errorCode} - {$errorMessage}");
+            throw SendGoException::tokenFailed(
+                $response->status(),
+                $body,
+                'token',
+                $this->apiVersion
+            );
         }
 
         return $body['data']['token'];
     }
 
-    /**
-     * 토큰 캐시 키를 생성합니다
-     */
+    protected function forceRefreshToken(): void
+    {
+        $cacheKey = $this->getTokenCacheKey();
+        Cache::forget($cacheKey);
+        $this->token = $this->requestNewToken();
+        Cache::put($cacheKey, $this->token, now()->addMinutes(50));
+    }
+
     protected function getTokenCacheKey(): string
     {
-        return 'sendgo_token_' . md5($this->accessKey . $this->secretKey);
+        return 'sendgo_token:' . $this->apiVersion . ':' . md5($this->accessKey . $this->secretKey);
     }
 
     protected function validateToken(): bool
@@ -119,11 +117,6 @@ class SendGo
      | HTTP Client
      |-----------------------------------------------------------------*/
 
-    /**
-     * Bearer 인증이 포함된 새 Http Client 반환
-     *
-     * @throws SendGoException
-     */
     protected function client()
     {
         if (!$this->validateToken()) {
@@ -134,6 +127,50 @@ class SendGo
             'Content-Type'  => $this->headers['Content-Type'],
             'Authorization' => $this->makeBearerAuthorization(),
         ]);
+    }
+
+    /* -----------------------------------------------------------------
+     | Send
+     |-----------------------------------------------------------------*/
+
+    protected function performSend(string $url, array $body): array
+    {
+        $response = $this->client()->post($url, $body);
+
+        if ($this->shouldRefreshToken($response)) {
+            $this->forceRefreshToken();
+            $response = $this->client()->post($url, $body);
+        }
+
+        if ($response->failed()) {
+            $endpointName = basename(parse_url($url, PHP_URL_PATH) ?? $url);
+            throw SendGoException::fromResponse(
+                $response->status(),
+                $response->json() ?? [],
+                $endpointName,
+                $this->apiVersion
+            );
+        }
+
+        return $response->json() ?? [];
+    }
+
+    protected function shouldRefreshToken($response): bool
+    {
+        if (!in_array($response->status(), [401, 403])) {
+            return false;
+        }
+
+        if ($this->apiVersion === 'v2') {
+            $code = ($response->json() ?? [])['code'] ?? null;
+            if ($code !== null && in_array($code, self::V2_NO_REFRESH_CODES)) {
+                return false;
+            }
+            return true;
+        }
+
+        // v1: 401/403이면 무조건 재발급
+        return true;
     }
 
     /* -----------------------------------------------------------------
@@ -155,6 +192,19 @@ class SendGo
     /* -----------------------------------------------------------------
      | Initialize
      |-----------------------------------------------------------------*/
+
+    protected function initializeApiVersion(): static
+    {
+        $version = config('sendgo.api_version', 'v1');
+        if (!in_array($version, self::ALLOWED_VERSIONS)) {
+            throw new SendGoException(
+                "Invalid API version: {$version}. Allowed values are: v1, v2.",
+                ['error_code' => 'INVALID_API_VERSION']
+            );
+        }
+        $this->apiVersion = $version;
+        return $this;
+    }
 
     protected function initializeHeaders(): static
     {
@@ -188,6 +238,15 @@ class SendGo
     protected function validateKeys(): bool
     {
         return !empty($this->accessKey) && !empty($this->secretKey);
+    }
+
+    /* -----------------------------------------------------------------
+     | Endpoint Builders
+     |-----------------------------------------------------------------*/
+
+    protected function buildTokenEndpoint(): string
+    {
+        return $this->url . "/{$this->apiVersion}/token";
     }
 
     /* -----------------------------------------------------------------
