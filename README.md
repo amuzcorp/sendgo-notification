@@ -1,7 +1,7 @@
 # 라라벨 카카오톡 알림톡·친구톡·SMS 연동 패키지 | Laravel Kakao Notification
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/techigh/sendgo-notification)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/amuzcorp/sendgo-notification/releases)
 [![Laravel](https://img.shields.io/badge/Laravel-8.x%20%7C%209.x%20%7C%2010.x%20%7C%2011.x-red.svg)](https://laravel.com)
 
 **Laravel 알림톡, 친구톡, SMS, LMS, MMS 쉬운 연동 패키지** - SendGo.io 기반
@@ -20,6 +20,7 @@
   - [LMS 전송](#4-lms-전송)
   - [MMS 전송](#5-mms-전송)
 - [고급 기능](#고급-기능)
+- [에러 코드](#에러-코드)
 - [SendGo란?](#sendgo란)
 - [문의 및 지원](#문의-및-지원)
 - [라이선스](#라이선스)
@@ -136,6 +137,9 @@ SENDGO_ACCESS_KEY=your_access_key_here
 SENDGO_SECRET_KEY=your_secret_key_here
 SENDGO_SENDER_KEY=your_sms_sender_key_here
 SENDGO_KAKAO_SENDER_KEY=your_kakao_sender_key_here
+
+# API 버전 설정 (기본값: v1)
+# SENDGO_API_VERSION=v2
 ```
 
 > ⚠️ **중요**: API 키는 절대 Git에 커밋하지 마세요! `.env` 파일은 `.gitignore`에 포함되어 있어야 합니다.
@@ -605,6 +609,84 @@ public function toAlim($notifiable): AlimTalkMessage
     return AlimTalkMessage::make()
         ->templateCode('ORDER_001')
         // ...
+}
+```
+
+---
+
+## ⚠️ 에러 코드
+
+API 요청 실패 시 `SendGoException`의 `context()['error_code']`로 에러 코드를 확인할 수 있습니다.
+
+### 인증 오류 (401)
+
+| 코드 | 설명 |
+|------|------|
+| `INVALID_AUTH_HEADER` | Authorization 헤더 없음 |
+| `INVALID_BASIC_AUTH` | Basic 인증 형식 오류 |
+| `INVALID_BASIC_AUTH_PAYLOAD` | Basic 인증 페이로드 오류 |
+| `INVALID_ACCESS_KEY` | 유효하지 않은 Access Key |
+| `INVALID_SECRET_KEY` | 유효하지 않은 Secret Key |
+| `INVALID_BEARER_TOKEN` | Bearer 토큰 없음 |
+| `INVALID_BEARER_TOKEN_PREFIX` | Bearer 토큰 prefix 오류 (v2 전용) |
+| `INVALID_BEARER_TOKEN_PAYLOAD` | Bearer 토큰 페이로드 오류 (v2 전용) |
+| `INVALID_BEARER_SIGNATURE` | Bearer 토큰 서명 불일치 (v2 전용) |
+| `INVALID_BEARER_APPLICATION` | 토큰에 해당하는 애플리케이션 없음 (v2 전용) |
+| `MALFORMED_BEARER_TOKEN` | 잘못된 형식의 Bearer 토큰 (v2 전용) |
+| `UNSUPPORTED_BEARER_TOKEN_VERSION` | 지원하지 않는 토큰 버전 (v2 전용) |
+| `TOKEN_MISMATCH` | 토큰이 현재 발급된 토큰과 불일치 (v2 전용) |
+| `TOKEN_EXPIRED` | 만료된 토큰 (자동 재발급 처리됨) |
+| `TOKEN_RECORD_NOT_FOUND` | 토큰 레코드 없음 (v2 전용) |
+
+### 권한 오류 (403)
+
+| 코드 | 설명 |
+|------|------|
+| `ACCESS_KEY_NOT_APPROVED` | 승인되지 않은 Access Key |
+| `IP_NOT_ALLOWED` | 허용되지 않은 IP |
+| `TEAM_REQUIRED_FOR_KAKAO` | 카카오 API는 팀 소속 앱만 사용 가능 |
+| `SENDER_APPLICATION_MISMATCH` | SMS 발신키가 앱과 불일치 |
+| `KAKAO_SENDER_APPLICATION_MISMATCH` | 카카오 발신키가 앱과 불일치 |
+
+### 리소스 오류 (404)
+
+| 코드 | 설명 |
+|------|------|
+| `INVALID_SENDER_KEY` | 유효하지 않은 SMS 발신키 |
+| `INVALID_KAKAO_SENDER_KEY` | 유효하지 않은 카카오 발신키 |
+| `INVALID_TEMPLATE_CODE` | 유효하지 않은 템플릿 코드 |
+| `OWNER_NOT_FOUND` | 캠페인 소유자 확인 불가 |
+| `SENDER_OWNER_NOT_FOUND` | SMS 발신키 소유자 확인 불가 |
+| `KAKAO_SENDER_OWNER_NOT_FOUND` | 카카오 발신키 소유자 확인 불가 |
+
+### 요청 오류 (422)
+
+| 코드 | 설명 |
+|------|------|
+| `EMPTY_CONTACTS` | 전송 대상 없음 |
+
+### 패키지 내부 오류
+
+| 코드 | 설명 |
+|------|------|
+| `INVALID_API_VERSION` | 지원하지 않는 API 버전 (v1, v2만 허용) |
+
+### 예외 처리 예시
+
+```php
+use Techigh\SendgoNotification\Exceptions\SendGoException;
+
+try {
+    $user->notify(new OrderShippedNotification($order));
+} catch (SendGoException $e) {
+    $errorCode = $e->context()['error_code'] ?? null;
+    $status    = $e->context()['status'] ?? null;
+
+    logger()->error('SendGo 발송 실패', [
+        'code'    => $errorCode,
+        'status'  => $status,
+        'message' => $e->getMessage(),
+    ]);
 }
 ```
 
