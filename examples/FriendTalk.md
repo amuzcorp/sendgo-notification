@@ -1,32 +1,46 @@
-# FriendTalk
+# FriendTalk 예제
 
-이 패키지는 Laravel의 Notification 시스템을 이용하여 카카오톡 친구톡을 전송할 수 있도록 도와줍니다.
-아래 가이드를 참고하여 패키지를 설정하고 메시지를 보낼 수 있습니다.
+카카오톡 친구톡 전송 예제 모음입니다.
 
-먼저 Laravel의 `make:notification` 명령어를 사용하여 Notification 클래스를 생성합니다.
+---
 
-```shell
+## 기본 설정
+
+```bash
 php artisan make:notification SendGoNotification
 ```
 
-#### Request to send a Friend Talk for Contact
+`.env` 설정:
 
-- SendGoNotification 클래스 내부에서 toFriend() 메서드를 정의하여 메시지를 설정할 수 있습니다.
-    - scheduleType → 'DIRECTLY' (즉시 발송) 또는 'SCHEDULED' (예약 발송)
-    - messageType → 'FT' (텍스트), 'FI' (이미지), 'FW' (와이드 이미지), 'FL' (와이드 아이템 리스트), 'FM' (커머스), 'FC' (캐러셀 피드), 'FA' (캐러셀
-      커머스), 'FP' (프리미엄 동영상) 중 하나
-    - content -> 친구톡 메시지 내용 (필수)
-    - image -> 친구톡 메시지 내용 중 이미지, messageType 이 'FI', 'FW', 'FL'일 경우 필수 (옵션), file 형태
-    - imageUrl -> 친구톡 메시지 내용 중 이미지 url (옵션), string 형태
-    - imageLink -> 친구톡 메시지 내용 중 이미지 클릭시 이동할 링크값 (옵션), string 형태
-    - buttons -> 친구톡 메시지 내용 중 버튼들의 정보에 대한 배열값 (옵션)
-    - wide -> 친구톡 메시지 중 와이드 이미지 여부 값, N 또는 Y 중 하나 (옵션)
-    - adFlag -> 친구톡 광고성 메시지 필수 표기 사항 노출 여부, N 또는 Y 중 하나 (옵션)
-    - replaceSms -> 대체 문자 발송 여부 (옵션)
-    - smsTitle → 대체 문자 메시지 제목, 대체 문자 발송시 필수
-    - smsContent → 대체 문자 메시지 내용, 대체 문자 발송시 필수
-    - to → 수신자 정보 (전화번호, 이름, 추가 변수 포함 가능)
-    - at -> 전송 시각, scheduleType이 'SCHEDULED'일 경우 필수
+```env
+SENDGO_URL=https://api.sendgo.io
+SENDGO_ACCESS_KEY=your_access_key
+SENDGO_SECRET_KEY=your_secret_key
+SENDGO_SENDER_KEY=your_sms_sender_key
+SENDGO_KAKAO_SENDER_KEY=your_kakao_sender_key
+
+# v2 API 사용 시
+SENDGO_API_VERSION=v2
+```
+
+---
+
+## 메시지 타입
+
+| 타입 | 설명 |
+|------|------|
+| `FT` | 텍스트형 |
+| `FI` | 이미지형 |
+| `FW` | 와이드 이미지형 |
+| `FL` | 와이드 아이템 리스트형 |
+| `FM` | 커머스형 |
+| `FC` | 캐러셀 피드형 |
+| `FA` | 캐러셀 커머스형 |
+| `FP` | 프리미엄 동영상형 |
+
+---
+
+## 1. 기본 텍스트형 (FT)
 
 ```php
 <?php
@@ -35,47 +49,27 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 use Techigh\SendgoNotification\Attributes\Friend\FriendTalkChannel;
 use Techigh\SendgoNotification\Attributes\Friend\FriendTalkMessage;
 
-class SendGoNotification extends Notification
+class EventNotification extends Notification
 {
     use Queueable;
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
         return [FriendTalkChannel::class];
     }
 
-
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toFriend(object $notifiable): FriendTalkMessage
     {
         return FriendTalkMessage::make()
-            ->scheduleType('DIRECTLY') // OPTIONAL, default = 'DIRECTLY'
-            ->messageType('FT') // REQUIRED
-            ->content('This is content') // REQUIRED
-            ->image('file:/')  // OPTIONAL
-            ->imageUrl('www.XXXX.XXXX/XXXXX') // OPTIONAL
-            ->imageLink('www.XXXX.XXXX/XXXXX') // OPTIONAL
-            ->buttons([{}, {}]) // OPTIONAL
-            ->wide('N') // OPTIONAL, default = 'N', REQUIRED when message type is 'FW' 
-            ->adFlag('N') // OPTIONAL, default = 'N'
-            ->replaceSms('N') // OPTIONAL, default = 'N', replace sms when failed to send
-            ->smsTitle('Title for FriendTalk') // OPTIONAL, default = null, REQUIRED when replace sms is 'Y'
-            ->smsContent('Content for FriendTalk') // OPTIONAL, default = null, REQUIRED when replace sms is 'Y'
+            ->scheduleType('DIRECTLY')
+            ->messageType('FT')                    // 텍스트형
+            ->content("안녕하세요, {$notifiable->name}님!\n\n새로운 이벤트가 시작되었습니다.")
             ->to([
                 'contact' => $notifiable->phone,
-                'name' => $notifiable->name,
-                'var1' => $notifiable->variable1,
+                'name'    => $notifiable->name,
             ])
             ->at();
     }
@@ -83,9 +77,190 @@ class SendGoNotification extends Notification
 ```
 
 ```php
-use App\Models\User;
-$user = User::query()->first();
-$user->notify(new SendGoNotification());
+$user->notify(new EventNotification());
 ```
 
-위 코드를 실행하면 사용자의 휴대폰 번호로 카카오 친구톡이 전송됩니다.
+---
+
+## 2. 이미지형 + 버튼 (FI)
+
+```php
+public function toFriend(object $notifiable): FriendTalkMessage
+{
+    return FriendTalkMessage::make()
+        ->scheduleType('DIRECTLY')
+        ->messageType('FI')                        // 이미지형
+        ->content("🎉 신상품 출시!\n\n{$this->product->name}\n가격: " . number_format($this->product->price) . "원")
+        ->imageUrl($this->product->image_url)      // 이미지 URL
+        ->imageLink($this->product->detail_url)    // 이미지 클릭 링크
+        ->buttons([
+            [
+                'type'   => 'WL',                  // 웹 링크
+                'name'   => '자세히 보기',
+                'linkMo' => $this->product->detail_url,
+                'linkPc' => $this->product->detail_url,
+            ],
+            [
+                'type'   => 'WL',
+                'name'   => '지금 구매하기',
+                'linkMo' => $this->product->purchase_url,
+                'linkPc' => $this->product->purchase_url,
+            ],
+        ])
+        ->wide('N')
+        ->adFlag('N')
+        ->to([
+            'contact' => $notifiable->phone,
+            'name'    => $notifiable->name,
+        ])
+        ->at();
+}
+```
+
+---
+
+## 3. 와이드 이미지형 (FW)
+
+```php
+public function toFriend(object $notifiable): FriendTalkMessage
+{
+    return FriendTalkMessage::make()
+        ->messageType('FW')                        // 와이드 이미지형
+        ->content('이번 주말 특별 세일!')
+        ->imageUrl('https://cdn.example.com/banner/sale.jpg')
+        ->imageLink('https://example.com/sale')
+        ->wide('Y')                                // FW는 Y 필수
+        ->buttons([
+            [
+                'type'   => 'WL',
+                'name'   => '세일 보러가기',
+                'linkMo' => 'https://example.com/sale',
+                'linkPc' => 'https://example.com/sale',
+            ],
+        ])
+        ->to([
+            'contact' => $notifiable->phone,
+            'name'    => $notifiable->name,
+        ])
+        ->at();
+}
+```
+
+---
+
+## 4. 광고성 메시지 (adFlag Y)
+
+광고성 메시지는 반드시 `adFlag('Y')`를 설정해야 합니다.
+
+```php
+public function toFriend(object $notifiable): FriendTalkMessage
+{
+    return FriendTalkMessage::make()
+        ->messageType('FT')
+        ->content("(광고) 오늘만! 전 상품 20% 할인\n무료수신거부 080-000-0000")
+        ->adFlag('Y')                              // 광고성 메시지 표기
+        ->to([
+            'contact' => $notifiable->phone,
+            'name'    => $notifiable->name,
+        ])
+        ->at();
+}
+```
+
+---
+
+## 5. 대체 SMS 발송 (친구톡 실패 시)
+
+```php
+public function toFriend(object $notifiable): FriendTalkMessage
+{
+    return FriendTalkMessage::make()
+        ->messageType('FT')
+        ->content("주문이 완료되었습니다!\n주문번호: {$this->orderNumber}")
+        ->replaceSms('Y')
+        ->smsTitle('[주문 완료]')
+        ->smsContent("주문이 완료되었습니다. 주문번호: {$this->orderNumber}")
+        ->to([
+            'contact' => $notifiable->phone,
+            'name'    => $notifiable->name,
+        ])
+        ->at();
+}
+```
+
+---
+
+## 6. 예약 발송
+
+```php
+public function toFriend(object $notifiable): FriendTalkMessage
+{
+    return FriendTalkMessage::make()
+        ->messageType('FT')
+        ->content("내일 오전 10시, 라이브 방송이 시작됩니다!")
+        ->scheduleType('SCHEDULED')
+        ->to([
+            'contact' => $notifiable->phone,
+            'name'    => $notifiable->name,
+        ])
+        ->at('2026-04-01 09:00:00');               // 방송 1시간 전 예약
+}
+```
+
+---
+
+## 7. 예외 처리
+
+```php
+use Techigh\SendgoNotification\Exceptions\SendGoException;
+
+try {
+    $user->notify(new EventNotification());
+} catch (SendGoException $e) {
+    $ctx = $e->context();
+
+    logger()->error('친구톡 발송 실패', [
+        'error_code'  => $ctx['error_code'] ?? null,
+        'status'      => $ctx['status'] ?? null,
+        'api_version' => $ctx['api_version'] ?? null,
+        'message'     => $e->getMessage(),
+    ]);
+}
+```
+
+---
+
+## 8. 큐(Queue) 비동기 발송
+
+```php
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class EventNotification extends Notification implements ShouldQueue
+{
+    use Queueable;
+
+    public string $queue = 'notifications';
+    public int $tries = 3;
+    public int $backoff = 10;
+}
+```
+
+```php
+// 대량 발송
+use Illuminate\Support\Facades\Notification;
+
+$users = User::whereNotNull('phone')->get();
+Notification::send($users, new EventNotification());
+```
+
+---
+
+## 9. v2 API 사용
+
+`.env`에서 `SENDGO_API_VERSION=v2`만 설정하면 코드 변경 없이 v2로 동작합니다.
+
+```env
+SENDGO_API_VERSION=v2
+```
+
+v2 에러 코드 전체 목록 → [API_V2_ERROR_CODES.md](../API_V2_ERROR_CODES.md)
