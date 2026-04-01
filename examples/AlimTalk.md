@@ -69,6 +69,36 @@ $user->notify(new OrderConfirmedNotification('ORD-20260101-001'));
 
 ---
 
+## 1-1. 다건 수신자 발송
+
+`toMany()`는 Laravel Notification 채널이 아니라 `AlimTalk` 서비스를 직접 호출할 때 사용합니다.
+
+```php
+use Techigh\SendgoNotification\Attributes\Alim\AlimTalk;
+use Techigh\SendgoNotification\Attributes\Alim\AlimTalkMessage;
+
+app(AlimTalk::class)->send(
+    AlimTalkMessage::make()
+        ->templateCode('ORDER_CONFIRM_001')
+        ->toMany([
+            [
+                'contact' => '01066443892',
+                'name' => 'John Doe',
+                'var1' => 'ORD-20260101-001',
+            ],
+            [
+                'contact' => '01012345678',
+                'name' => 'Jane Doe',
+                'var1' => 'ORD-20260101-002',
+            ],
+        ])
+        ->at()
+        ->toArray()
+);
+```
+
+---
+
 ## 2. 대체 SMS 발송 (알림톡 실패 시 자동 SMS)
 
 ```php

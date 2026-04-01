@@ -29,7 +29,7 @@ class SmsMessage extends MessageAbstract
      * @param string|null $subject
      * @return $this
      */
-    public function subject(string $subject = null): static
+    public function subject(?string $subject = null): static
     {
         $this->subject = $subject;
         return $this;

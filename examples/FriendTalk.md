@@ -82,6 +82,35 @@ $user->notify(new EventNotification());
 
 ---
 
+## 1-1. 다건 수신자 발송
+
+`toMany()`는 Laravel Notification 채널이 아니라 `FriendTalk` 서비스를 직접 호출할 때 사용합니다.
+
+```php
+use Techigh\SendgoNotification\Attributes\Friend\FriendTalk;
+use Techigh\SendgoNotification\Attributes\Friend\FriendTalkMessage;
+
+app(FriendTalk::class)->send(
+    FriendTalkMessage::make()
+        ->messageType('FT')
+        ->content('안녕하세요. 오늘의 혜택을 확인해보세요.')
+        ->toMany([
+            [
+                'contact' => '01066443892',
+                'name' => 'John Doe',
+            ],
+            [
+                'contact' => '01012345678',
+                'name' => 'Jane Doe',
+            ],
+        ])
+        ->at()
+        ->toArray()
+);
+```
+
+---
+
 ## 2. 이미지형 + 버튼 (FI)
 
 ```php

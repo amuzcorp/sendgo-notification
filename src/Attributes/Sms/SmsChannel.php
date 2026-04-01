@@ -23,6 +23,14 @@ class SmsChannel implements ChannelInterface
     {
         if (method_exists($notification, 'toSms')) {
             $message = $notification->toSms($notifiable);
+
+            if ($message->hasMultipleRecipients()) {
+                throw new SendGoException(
+                    'toMany() is not supported in Laravel Notification channels. Use the Sms attribute service directly.',
+                    ['error_code' => 'MULTIPLE_RECIPIENTS_NOT_SUPPORTED_IN_NOTIFICATION']
+                );
+            }
+
             $this->attribute->send($message->toArray());
         }
     }

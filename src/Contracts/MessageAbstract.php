@@ -5,7 +5,8 @@ namespace Techigh\SendgoNotification\Contracts;
 abstract class MessageAbstract
 {
     protected $at = null;
-    protected array $to;
+    protected array $to = [];
+    protected bool $multipleRecipients = false;
     protected string $scheduleType = 'DIRECTLY'; // DIRECTLY | RESERVED
 
     static function make(): static
@@ -15,13 +16,36 @@ abstract class MessageAbstract
 
 
     /**
-     * @breif Required
+     * @breif Required for bulk sending outside Laravel Notification channels
      * @param array $to
      * @return $this
      */
+    public function toMany(array $to): static
+    {
+        if (!array_is_list($to) || (isset($to[0]) && !is_array($to[0]))) {
+            throw new \InvalidArgumentException('toMany() expects a list of recipient arrays.');
+        }
+
+        $this->multipleRecipients = true;
+        $this->to = $to;
+
+        return $this;
+    }
+
+    public function hasMultipleRecipients(): bool
+    {
+        return $this->multipleRecipients;
+    }
+
     public function to(array $to): static
     {
+        if (array_is_list($to) && isset($to[0]) && is_array($to[0])) {
+            throw new \InvalidArgumentException('Use toMany() for multiple recipients.');
+        }
+
+        $this->multipleRecipients = false;
         $this->to = [$to];
+
         return $this;
     }
 

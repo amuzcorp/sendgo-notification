@@ -1,7 +1,7 @@
 # SendGo Notification — Laravel 카카오톡·SMS 연동 패키지
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](https://github.com/amuzcorp/sendgo-notification/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/amuzcorp/sendgo-notification/releases)
 [![Laravel](https://img.shields.io/badge/Laravel-8.x%20%7C%209.x%20%7C%2010.x%20%7C%2011.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-purple.svg)](https://php.net)
 
@@ -15,9 +15,12 @@ Laravel에서 **카카오 알림톡**, **친구톡**, **SMS / LMS / MMS**를 전
 - [설치](#설치)
 - [환경 설정](#환경-설정)
 - [사용 방법](#사용-방법)
+- [수신자 전달 방식](#수신자-전달-방식)
   - [알림톡 (AlimTalk)](#알림톡-alimtalk)
   - [친구톡 (FriendTalk)](#친구톡-friendtalk)
   - [SMS / LMS / MMS](#sms--lms--mms)
+- [예제 문서](#예제-문서)
+- [변경 이력](#변경-이력)
 - [예외 처리](#예외-처리)
 - [큐 비동기 발송](#큐-비동기-발송)
 - [v1 → v2 마이그레이션](#v1--v2-마이그레이션)
@@ -69,6 +72,59 @@ SENDGO_API_VERSION=v1
 
 ## 사용 방법
 
+## 수신자 전달 방식
+
+`to(array $to)`는 단일 수신자 전용입니다.
+
+```php
+->to([
+    'contact' => '01066443892',
+    'name' => 'John Doe',
+    'var1' => 'content1',
+])
+```
+
+여러 수신자를 한 번에 보내려면 `toMany(array $to)`를 사용해야 합니다.
+
+```php
+->toMany([
+    [
+        'contact' => '01066443892',
+        'name' => 'John Doe',
+        'var1' => 'content1',
+    ],
+    [
+        'contact' => '01012345678',
+        'name' => 'Jane Doe',
+        'var1' => 'content2',
+    ],
+])
+```
+
+각 수신자 항목은 `contact`를 필수로 가지며, 필요에 따라 `name`, `var1`~`var8`를 추가할 수 있습니다.
+
+`toMany()`는 Laravel `Notification` 채널에서는 사용할 수 없고, `Sms`, `AlimTalk`, `FriendTalk` 서비스를 직접 호출하는 경우에만 지원됩니다.
+
+```php
+use Techigh\SendgoNotification\Attributes\Sms\Sms;
+use Techigh\SendgoNotification\Attributes\Sms\SmsMessage;
+
+app(Sms::class)->send(
+    SmsMessage::make()
+        ->messageType('SMS')
+        ->content('[공지] 시스템 점검 안내')
+        ->toMany([
+            ['contact' => '01066443892', 'name' => 'John Doe'],
+            ['contact' => '01012345678', 'name' => 'Jane Doe'],
+        ])
+        ->toArray()
+);
+```
+
+`Notification` 채널에서 `toMany()`를 사용하면 `MULTIPLE_RECIPIENTS_NOT_SUPPORTED_IN_NOTIFICATION` 예외가 발생합니다.
+
+---
+
 ### 알림톡 (AlimTalk)
 
 사전 승인된 템플릿으로 공식 비즈니스 메시지를 전송합니다.
@@ -118,7 +174,8 @@ $user->notify(new OrderConfirmedNotification('ORD-20260101-001'));
 | `replaceSms(string)` | | 알림톡 실패 시 SMS 대체 (`'N'` 기본) |
 | `smsTitle(string)` | 조건부 | 대체 SMS 제목 (replaceSms `'Y'`일 때 필수) |
 | `smsContent(string)` | 조건부 | 대체 SMS 내용 (replaceSms `'Y'`일 때 필수) |
-| `to(array)` | ✅ | 수신자 정보 (`contact` 필수, `name` / `var1`~`var8` 선택) |
+| `to(array)` | ✅ | 단일 수신자 정보 (`contact` 필수, `name` / `var1`~`var8` 선택) |
+| `toMany(array)` | 배치 전용 | 다중 수신자 정보. `Notification` 채널에서는 사용 불가 |
 | `at(string\|null)` | 조건부 | 예약 시각 (`SCHEDULED`일 때 필수, `Y-m-d H:i:s`) |
 
 더 많은 예제 → [examples/AlimTalk.md](examples/AlimTalk.md)
@@ -194,7 +251,8 @@ class NewProductNotification extends Notification
 | `replaceSms(string)` | | 친구톡 실패 시 SMS 대체 |
 | `smsTitle(string)` | 조건부 | 대체 SMS 제목 |
 | `smsContent(string)` | 조건부 | 대체 SMS 내용 |
-| `to(array)` | ✅ | 수신자 정보 |
+| `to(array)` | ✅ | 단일 수신자 정보 |
+| `toMany(array)` | 배치 전용 | 다중 수신자 정보. `Notification` 채널에서는 사용 불가 |
 | `at(string\|null)` | 조건부 | 예약 시각 |
 
 더 많은 예제 → [examples/FriendTalk.md](examples/FriendTalk.md)
@@ -268,10 +326,25 @@ return SmsMessage::make()
 | `scheduleType(string)` | | `'DIRECTLY'`(기본) 또는 `'SCHEDULED'` |
 | `subject(string)` | 조건부 | 제목 (LMS / MMS 필수) |
 | `files(array)` | 조건부 | 파일 경로 배열 (MMS 필수, 최대 3개) |
-| `to(array)` | ✅ | 수신자 정보 (`contact` 필수, `var1`~`var8` 선택) |
+| `to(array)` | ✅ | 단일 수신자 정보 (`contact` 필수, `var1`~`var8` 선택) |
+| `toMany(array)` | 배치 전용 | 다중 수신자 정보. `Notification` 채널에서는 사용 불가 |
 | `at(string\|null)` | 조건부 | 예약 시각 |
 
 더 많은 예제 → [examples/SMS.md](examples/SMS.md)
+
+---
+
+## 예제 문서
+
+- [알림톡 예제](examples/AlimTalk.md)
+- [친구톡 예제](examples/FriendTalk.md)
+- [SMS 예제](examples/SMS.md)
+
+---
+
+## 변경 이력
+
+- [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
@@ -417,6 +490,7 @@ v2 에러 코드 전체 목록 → [API_V2_ERROR_CODES.md](API_V2_ERROR_CODES.md
 | 코드 | 설명 |
 |------|------|
 | `INVALID_API_VERSION` | 지원하지 않는 API 버전 |
+| `MULTIPLE_RECIPIENTS_NOT_SUPPORTED_IN_NOTIFICATION` | Laravel Notification 채널에서 `toMany()` 사용 불가 |
 
 v2 에러 코드 상세 → [API_V2_ERROR_CODES.md](API_V2_ERROR_CODES.md)
 

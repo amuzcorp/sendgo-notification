@@ -79,6 +79,37 @@ $user->notify(new VerificationNotification('123456'));
 
 ---
 
+## 1-1. 다건 수신자 발송
+
+`toMany()`는 Laravel Notification 채널이 아니라 `Sms` 서비스를 직접 호출할 때 사용합니다.
+
+```php
+use Techigh\SendgoNotification\Attributes\Sms\Sms;
+use Techigh\SendgoNotification\Attributes\Sms\SmsMessage;
+
+app(Sms::class)->send(
+    SmsMessage::make()
+        ->messageType('SMS')
+        ->content('[공지] 시스템 점검이 예정되어 있습니다.')
+        ->toMany([
+            [
+                'contact' => '01066443892',
+                'name' => 'John Doe',
+                'var1' => 'group-a',
+            ],
+            [
+                'contact' => '01012345678',
+                'name' => 'Jane Doe',
+                'var1' => 'group-b',
+            ],
+        ])
+        ->at()
+        ->toArray()
+);
+```
+
+---
+
 ## 2. LMS 장문 발송
 
 LMS는 `subject`가 필수입니다.
