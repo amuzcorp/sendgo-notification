@@ -220,7 +220,7 @@ class SendGo
 
     protected function initializeApiUrl(): static
     {
-        $this->endpoint = config('sendgo.url');
+        $this->endpoint = rtrim(config('sendgo.url') ?: 'https://sendgo.io', '/');
         $this->url = $this->endpoint . '/api';
         return $this;
     }

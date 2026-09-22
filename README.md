@@ -524,3 +524,12 @@ MIT — [LICENSE](LICENSE) 참조
 ---
 
 **Made with ❤️ by [Techigh](https://github.com/techigh) | Powered by [SendGo.io](https://www.sendgo.io)**
+
+## 최신 코어 API 연동
+
+기존 Notification 채널 호출은 유지됩니다. 최신 브랜드메시지·템플릿·발신번호 관리는
+`sendgo/php ^1.4` 코어를 사용합니다. `SENDGO_API_VERSION=v2`를 설정하고
+`app(\Sendgo\Php\Sendgo::class)`로 코어 서비스를 가져오세요.
+계정·조직·API 키·허용 IP 관리는 `SENDGO_AGENT_TOKEN`을 설정한 뒤
+`app(\Sendgo\Php\AccountClient::class)`로 사용합니다. 계정 클라이언트에는 발송용 키가 필요 없습니다.
+`SENDGO_URL`을 생략하면 `https://sendgo.io`를 사용합니다.

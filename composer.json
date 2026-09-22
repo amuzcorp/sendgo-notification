@@ -30,7 +30,8 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.2",
-        "ext-json": "*"
+        "ext-json": "*",
+        "sendgo/php": "^1.4"
     },
     "config": {
         "sort-packages": true

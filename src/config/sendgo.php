@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'url' => env('SENDGO_URL'),
+    'agent_token' => env('SENDGO_AGENT_TOKEN'),
+    'url' => env('SENDGO_URL', 'https://sendgo.io'),
     'access_key' => env('SENDGO_ACCESS_KEY'),
     'secret_key' => env('SENDGO_SECRET_KEY'),
     'sms_sender_key' => env('SENDGO_SENDER_KEY'),
