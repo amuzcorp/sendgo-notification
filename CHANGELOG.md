@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0 — 2026-09-24
+
+- 코어 1.5.0 연동 및 템플릿 폴더 API 접근·문서 갱신.
+- 폴더에서 꺼내기는 `folderUuid: null`, 미분류 조회는 `folderUuid=none`을 사용합니다.
+
+
 모든 주요 변경 사항은 이 파일에 기록됩니다.
 
 ## [Unreleased]

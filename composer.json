@@ -31,7 +31,7 @@
     "require": {
         "php": ">=8.2",
         "ext-json": "*",
-        "sendgo/php": "^1.4"
+        "sendgo/php": "^1.5"
     },
     "config": {
         "sort-packages": true
